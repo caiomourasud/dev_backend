@@ -8,6 +8,7 @@ import com.example.todoapi.repository.TodoRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TodoService {
@@ -25,6 +27,9 @@ public class TodoService {
 
     @Transactional(readOnly = true)
     public List<TodoDTO> findAll(Boolean completed, String priority, String sortBy, String sortDirection) {
+        log.info("Buscando todos com filtros - completed: {}, priority: {}, sortBy: {}, sortDirection: {}", 
+                 completed, priority, sortBy, sortDirection);
+        
         Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
         
         Specification<Todo> spec = (root, query, cb) -> {
@@ -41,40 +46,59 @@ public class TodoService {
             return cb.and(predicates.toArray(new Predicate[0]));
         };
         
-        return todoRepository.findAll(spec, sort).stream()
+        List<TodoDTO> todos = todoRepository.findAll(spec, sort).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+                
+        log.info("Encontrados {} todos", todos.size());
+        return todos;
     }
 
     @Transactional(readOnly = true)
     public TodoDTO findById(Long id) {
+        log.info("Buscando todo por ID: {}", id);
         return todoRepository.findById(id)
                 .map(this::convertToDTO)
-                .orElseThrow(() -> new EntityNotFoundException("Todo not found with id: " + id));
+                .orElseThrow(() -> {
+                    log.error("Todo não encontrado com ID: {}", id);
+                    return new EntityNotFoundException("Todo not found with id: " + id);
+                });
     }
 
     @Transactional
     public TodoDTO create(TodoDTO todoDTO) {
+        log.info("Criando novo todo: {}", todoDTO.getTitle());
         Todo todo = new Todo();
         updateTodoFromDTO(todo, todoDTO);
-        return convertToDTO(todoRepository.save(todo));
+        Todo savedTodo = todoRepository.save(todo);
+        log.info("Todo criado com ID: {}", savedTodo.getId());
+        return convertToDTO(savedTodo);
     }
 
     @Transactional
     public TodoDTO update(Long id, TodoDTO todoDTO) {
+        log.info("Atualizando todo ID: {}", id);
         Todo todo = todoRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Todo not found with id: " + id));
+                .orElseThrow(() -> {
+                    log.error("Todo não encontrado para atualização. ID: {}", id);
+                    return new EntityNotFoundException("Todo not found with id: " + id);
+                });
         
         updateTodoFromDTO(todo, todoDTO);
-        return convertToDTO(todoRepository.save(todo));
+        Todo updatedTodo = todoRepository.save(todo);
+        log.info("Todo atualizado com sucesso. ID: {}", id);
+        return convertToDTO(updatedTodo);
     }
 
     @Transactional
     public void delete(Long id) {
+        log.info("Deletando todo ID: {}", id);
         if (!todoRepository.existsById(id)) {
+            log.error("Todo não encontrado para deleção. ID: {}", id);
             throw new EntityNotFoundException("Todo not found with id: " + id);
         }
         todoRepository.deleteById(id);
+        log.info("Todo deletado com sucesso. ID: {}", id);
     }
 
     private void updateTodoFromDTO(Todo todo, TodoDTO todoDTO) {
@@ -86,7 +110,10 @@ public class TodoService {
         
         if (todoDTO.getCategoryId() != null) {
             Category category = categoryRepository.findById(todoDTO.getCategoryId())
-                    .orElseThrow(() -> new EntityNotFoundException("Category not found with id: " + todoDTO.getCategoryId()));
+                    .orElseThrow(() -> {
+                        log.error("Categoria não encontrada. ID: {}", todoDTO.getCategoryId());
+                        return new EntityNotFoundException("Category not found with id: " + todoDTO.getCategoryId());
+                    });
             todo.setCategory(category);
         }
     }

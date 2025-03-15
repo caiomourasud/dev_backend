@@ -1,0 +1,12 @@
+-------------------------------------------------------------------------------
+Test set: com.example.todoapi.service.CategoryServiceTest
+-------------------------------------------------------------------------------
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.985 s -- in com.example.todoapi.service.CategoryServiceTest
+com.example.todoapi.service.CategoryServiceTest.delete_WhenCategoryDoesNotExist_ShouldThrowException -- Time elapsed: 0.925 s
+com.example.todoapi.service.CategoryServiceTest.findById_WhenCategoryDoesNotExist_ShouldThrowException -- Time elapsed: 0.004 s
+com.example.todoapi.service.CategoryServiceTest.findById_WhenCategoryExists_ShouldReturnCategory -- Time elapsed: 0.004 s
+com.example.todoapi.service.CategoryServiceTest.findAll_ShouldReturnListOfCategories -- Time elapsed: 0.007 s
+com.example.todoapi.service.CategoryServiceTest.update_WhenCategoryDoesNotExist_ShouldThrowException -- Time elapsed: 0.006 s
+com.example.todoapi.service.CategoryServiceTest.create_ShouldReturnCreatedCategory -- Time elapsed: 0.003 s
+com.example.todoapi.service.CategoryServiceTest.delete_WhenCategoryExists_ShouldDeleteCategory -- Time elapsed: 0.002 s
+com.example.todoapi.service.CategoryServiceTest.update_WhenCategoryExists_ShouldReturnUpdatedCategory -- Time elapsed: 0.002 s
